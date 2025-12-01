@@ -14,5 +14,5 @@ jobs:
         with:
           ruby-version: 3.4.7
 
-      - name: Run a one-line script
+      - name: Run tests
         run: ./test.rb
