@@ -8,13 +8,28 @@ trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # - the Emacs `move-file-to-trash` command
 # - https://github.com/sindresorhus/trash
 
+# ensure no leading - (so nothing thinks it's a flag)
+mkpath() {
+	case "$1" in
+		/*) printf '%s' "$1" ;;
+		*) printf './%s' "$1" ;;
+	esac
+}
+mydirname() {
+	dirname "$(mkpath "$1")"
+}
+mybasename() {
+	# In GNU bash 3.2.57(1)-release, `basename -- ...` doesn't work
+	basename "$(mkpath "$1")"
+}
+
 # https://stackoverflow.com/a/21188136
 # Mostly like `realpath --no-symlinks`, but --no-symlinks is only available for GNU realpath.
 get_abs_filename() {
 	local dirname basename
-	dirname=$(dirname -- "$1") || exit 2
+	dirname=$(mydirname "$1") || exit 2
 	if [ -d "$dirname" ]; then
-		basename=$(basename -- "$1") || exit 2
+		basename=$(mybasename "$1") || exit 2
 		printf "%s" "$(cd "$dirname" >/dev/null && pwd)/${basename}"
 	else
 		echo "Directory does not exist: $dirname" >&2
@@ -90,9 +105,9 @@ can_delete_file() {
 	fi
 	# To delete a file, all you need is write and execute permissions on its parent directory.
 	local dir
-	dir=$(dirname -- "$1") || return 1
+	dir=$(mydirname "$1") || return 1
 	if [ ! -w "$dir" ] || [ ! -x "$dir" ]; then
-		echo "Cannot trash '$file' because we don't have write and execute permissions on its parent directory '$(dirname "$file")'" >&2
+		echo "Cannot trash '$file' because we don't have write and execute permissions on its parent directory '$(mydirname "$file")'" >&2
 		return 1
 	fi
 }
@@ -195,7 +210,7 @@ mountpoint_of___helper() {
 	dev=$(stat_device "$1") || return 2
 
 	while [ "$1" != "/" ]; do
-		parent=$(dirname -- "$1") || return 2
+		parent=$(mydirname "$1") || return 2
 		parentdev=$(stat_device "$parent") || return 2
 		if [ "$parentdev" = "$dev" ]; then
 			set -- "$parent"
@@ -408,8 +423,8 @@ fi
 ## Choose strategy
 
 choose_strategy() {
-	UNAME=$( command -v uname) # https://gist.github.com/prabirshrestha/3080525?permalink_comment_id=2962265#gistcomment-2962265
-	case $( "${UNAME}" | tr '[:upper:]' '[:lower:]') in
+	UNAME=$(command -v uname) || exit 2 # https://gist.github.com/prabirshrestha/3080525?permalink_comment_id=2962265#gistcomment-2962265
+	case $("${UNAME}" | tr '[:upper:]' '[:lower:]') in
 		msys*|cygwin*|mingw*|nt|win*)
 			echo "Windows isn't currently supported!" >&2
 			return 1
@@ -466,12 +481,12 @@ case "$TRASH_STRATEGY" in
 			trash=$(get_freedesktop_trashdir "$file")
 			check_not_trash_sub_or_super_directory "$file"
 			thedate=$(date +"%Y-%m-%dT%H:%M:%S")
-			dest_filename=$(basename -- "$file")
+			dest_filename=$(mybasename "$file")
 			if [ -e "$trash/info/$dest_filename.trashinfo" ] || [ -L "$trash/info/$dest_filename.trashinfo" ] || [ -e "$trash/files/$dest_filename" ] || [ -L "$trash/files/$dest_filename" ]; then
-				dest_filename="$(basename -- "$file") $thedate"
+				dest_filename="$(mybasename "$file") $thedate"
 			fi
 			while [ -e "$trash/info/$dest_filename.trashinfo" ] || [ -L "$trash/info/$dest_filename.trashinfo" ] || [ -e "$trash/files/$dest_filename" ] || [ -L "$trash/files/$dest_filename" ]; do
-				dest_filename="$(basename -- "$file") $thedate $RANDOM"
+				dest_filename="$(mybasename "$file") $thedate $RANDOM"
 			done
 			while : ; do
 				[ -z "$verbose" ] || printf 'Writing to "%s":\n\t[Trash Info]\n\tPath=%s\n\tDeletionDate=%s\n' "$trash/info/$dest_filename.trashinfo" "$(urlencode "$file")" "$thedate" >&2
@@ -479,7 +494,7 @@ case "$TRASH_STRATEGY" in
 					break
 				else
 					printf 'Failed to write! Trying a different name. ' >&2
-					dest_filename="$(basename -- "$file") $thedate $RANDOM$RANDOM"
+					dest_filename="$(mybasename "$file") $thedate $RANDOM$RANDOM"
 				fi
 			done
 			[ -z "$verbose" ] || echo mv -n "'$file'" "'$trash/files/$dest_filename'" >&2
@@ -517,7 +532,7 @@ case "$TRASH_STRATEGY" in
 		[ -z "$verbose" ] || echo "Trash directory: '$trash'"
 		# TODO: check that none of the arguments are superdirectories of the trash directory
 		for file in "$@"; do
-			dest_filename=$(basename -- "$file")
+			dest_filename=$(mybasename "$file")
 			while [ -e "$trash/$dest_filename" ] || [ -L "$trash/$dest_filename" ]; do
 				dest_filename="$dest_filename $(date +"%Y-%m-%dT%H:%M:%S")"
 			done
