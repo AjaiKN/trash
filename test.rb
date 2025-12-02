@@ -126,6 +126,7 @@ class TestTrash < Minitest::Test
 	end
 
 	def test_gio
+		skip "gio CLI not available" unless system "which gio"
 		strategy "gio"
 		FileUtils.touch @filename
 		puts `trash -v -- '#{@filename}'`
