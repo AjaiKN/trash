@@ -26,5 +26,5 @@ git add man/man1/zap.1
 
 git commit -m "release: v$version"
 git tag -s "v$version" -em "v$version"
-git push origin "v$version"
+git push origin main "v$version"
 gh release create "v$version" --notes-from-tag zap.tar.gz
