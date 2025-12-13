@@ -11,9 +11,6 @@ if [[ $# -eq 0 ]]; then
 fi
 version="${1#v}"
 
-bin/zap -f zap.tar.gz
-tar caf zap.tar.gz bin/zap man/man1/zap.1 _zap zap.plugin.zsh
-
 pattern='"zap\.sh .*"'
 replacement='"zap.sh '"$version"'"'
 sed s/"$pattern"/"$replacement"/ bin/zap > bin/zap.new
@@ -23,6 +20,12 @@ git add bin/zap
 
 ./generate-manpage.sh
 git add man/man1/zap.1
+
+(
+	cd ..
+	zap/bin/zap -f zap/zap.tar.gz
+	tar caf zap/zap.tar.gz zap/{bin/zap,man/man1/zap.1,_zap,zap.plugin.sh}
+)
 
 git commit -m "release: v$version"
 git tag -s "v$version" -em "v$version"
