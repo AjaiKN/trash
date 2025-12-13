@@ -18,6 +18,7 @@ pattern='"zap\.sh .*"'
 replacement='"zap.sh '"$version"'"'
 sed s/"$pattern"/"$replacement"/ bin/zap > bin/zap.new
 mv bin/zap.new bin/zap
+chmod +x bin/zap
 git add bin/zap
 
 ./generate-manpage.sh
