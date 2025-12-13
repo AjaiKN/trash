@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+# shellcheck disable=SC2154
+trap 's=$?; echo >&2 ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+set -x
+
+if [[ $# -eq 0 ]]; then
+	echo "must provide version number"
+	exit 1
+fi
+version="${1#v}"
+
+bin/zap -f zap.tar.gz
+tar caf zap.tar.gz bin/zap man/man1/zap.1 _zap zap.plugin.zsh
+
+pattern='"zap\.sh .*"'
+replacement='"zap.sh '"$version"'"'
+sed s/"$pattern"/"$replacement"/ bin/zap > bin/zap.new
+mv bin/zap.new bin/zap
+git add bin/zap
+
+./generate-manpage.sh
+git add man/man1/zap.1
+
+git commit -m "release: v$version"
+git tag -s "v$version" -em "v$version"
+git push origin "v$version"
+gh release create "v$version" --notes-from-tag zap.tar.gz
