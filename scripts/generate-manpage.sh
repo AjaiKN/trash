@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "$0")"/.. || exit 1
 
 if ! command -v help2man >/dev/null 2>&1 || ! command -v ruby >/dev/null 2>&1; then
 	if command -v nix-shell >/dev/null 2>&1; then

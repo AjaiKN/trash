@@ -5,6 +5,8 @@ set -euo pipefail
 trap 's=$?; echo >&2 ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 set -x
 
+cd "$(dirname "$0")"/..
+
 if [[ $# -eq 0 ]]; then
 	echo "must provide version number"
 	exit 1
@@ -18,7 +20,7 @@ mv bin/zap.new bin/zap
 chmod +x bin/zap
 git add bin/zap
 
-./generate-manpage.sh
+scripts/generate-manpage.sh
 git add man/man1/zap.1
 
 bin/zap -f zap.tar.gz
@@ -29,4 +31,4 @@ git tag -s "v$version" -em "v$version"
 git push origin main "v$version"
 gh release create "v$version" --notes-from-tag zap.tar.gz
 
-brew bump --tap ajaikn/homebrew-tap --no-fork --open-pr zap.sh
+# brew bump --tap ajaikn/homebrew-tap --no-fork --open-pr zap.sh
