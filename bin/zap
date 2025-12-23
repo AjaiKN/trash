@@ -305,7 +305,7 @@ while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-h|--help)
 			print_usage
-			exit 1
+			exit
 			;;
 		-f|--force)
 			force=1
@@ -327,17 +327,17 @@ while [[ $# -gt 0 ]]; do
 		--interactive=never|--interactive=no|--interactive=none)
 			interactive=0
 			shift
-			echo "TODO: implement -i/-I/--interactive"; exit 1
+			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
 		-I|--interactive=once)
 			interactive=2
 			shift
-			echo "TODO: implement -i/-I/--interactive"; exit 1
+			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
 		-i|--interactive|--interactive=always|--interactive=yes)
 			interactive=3
 			shift
-			echo "TODO: implement -i/-I/--interactive"; exit 1
+			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
 		--interactive=*)
 			# message from GNU rm
@@ -347,7 +347,7 @@ Valid arguments for ‘--interactive’ are:
   - ‘once’
   - ‘always’, ‘yes’
 Try '$0 --help' for more information."
-			exit 1
+			exit 5
 			;;
 		--strategy|-s)
 			ZAP_STRATEGY="$2"
@@ -375,7 +375,7 @@ Try '$0 --help' for more information."
 		-*)
 			echo "ERROR: Unknown option: $1" >&2
 			print_usage
-			exit 1
+			exit 2
 			;;
 		*)
 			break
@@ -385,7 +385,7 @@ done
 
 if [[ $# -eq 0 ]] && [ -z $force ]; then
 	print_usage
-	exit 1
+	exit 2
 fi
 
 ## Checks
