@@ -493,7 +493,7 @@ case "$ZAP_STRATEGY" in
 				if [ -n "$dry_run" ] || printf '[Trash Info]\nPath=%s\nDeletionDate=%s\n' "$(urlencode "$file")" "$thedate" >"$trash/info/$dest_filename.trashinfo"; then
 					break
 				else
-					printf 'Failed to write! Trying a different name. ' >&2
+					[ -z "$verbose" ] || printf 'Failed to write! Trying a different name. ' >&2
 					dest_filename="$(mybasename "$file") $thedate $RANDOM$RANDOM"
 				fi
 			done
