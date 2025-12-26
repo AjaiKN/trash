@@ -203,7 +203,7 @@ mountpoint_of() {
 
 	mountpoint_of___helper "$path" ||
 		# fallback: use df (POSIX df -P if available). Prints mountpoint column from df.
-		df -P "$path" 2>/dev/null | awk 'NR==2{print $6; exit}'
+		list_mountpoints "$path" | head -n 1
 }
 mountpoint_of___helper() {
 	local dev parent parentdev
@@ -280,6 +280,48 @@ get_freedesktop_trashdir() {
 	mkdir -p "$ret"/{files,info}
 
 	printf '%s\n' "$ret"
+}
+
+list_mountpoints() {
+	df -P "$@" | {
+		IFS= read -r _header_line
+		local regex='^.* +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+%? +(/.*)$'
+		local ret=0 line
+		while IFS= read -r line; do
+			if [[ $line =~ $regex ]]; then
+				mountpoint=${BASH_REMATCH[1]}
+				printf '%s\n' "$mountpoint"
+			else
+				printf "Can't parse df -P output line: '%s'\n" "$line" >&2
+				ret=1
+			fi
+		done
+		return $ret
+	}
+}
+
+get_freedesktop_trashdirs() {
+	local home_trashdir="${XDG_DATA_HOME:-$HOME/.local/share}/Trash"
+	if [[ -d $home_trashdir ]]; then
+		printf '%s\n' "$home_trashdir"
+	fi
+
+	local mountpoint dir
+	list_mountpoints | while IFS= read -r mountpoint; do
+		ls -d "$mountpoint"/.Trash/* "$mountpoint"/.Trash-* 2>/dev/null || :
+	done
+}
+
+get_misc_trashdirs() {
+	{
+		ls -d "$HOME"/{.Trash,.trash,trash,Trash,.gomi} 2>/dev/null || :
+		ls -d /Volumes/*/.Trashes/* 2>/dev/null || :
+
+		local mountpoint dir
+		list_mountpoints | while IFS= read -r mountpoint; do
+			ls -d "$mountpoint"/.Trashes/* 2>/dev/null || :
+		done
+	} | xargs realpath 2>/dev/null | sort | uniq
 }
 
 ## Parse options
