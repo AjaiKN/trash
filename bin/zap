@@ -11,8 +11,8 @@ trap 's=$?; echo >&2 "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 # ensure no leading - (so nothing thinks it's a flag)
 mkpath() {
 	case "$1" in
-		/*) printf '%s' "$1" ;;
-		*) printf './%s' "$1" ;;
+		(/*) printf '%s' "$1" ;;
+		(*) printf './%s' "$1" ;;
 	esac
 }
 mydirname() {
@@ -345,43 +345,43 @@ interactive=1
 while [[ $# -gt 0 ]]; do
 	opt="$1"
 	case "$1" in
-		-h|--help)
+		(-h|--help)
 			print_usage
 			exit
 			;;
-		-f|--force)
+		(-f|--force)
 			force=1
 			interactive=0
 			shift
 			;;
-		-n|--dry-run)
+		(-n|--dry-run)
 			dry_run=1
 			verbose=1
 			shift
 			;;
-		-d|--dir|-r|-R|--recursive) #no-op, for rm compatibility
+		(-d|--dir|-r|-R|--recursive) #no-op, for rm compatibility
 			shift
 			;;
-		-v|--verbose)
+		(-v|--verbose)
 			verbose=1
 			shift
 			;;
-		--interactive=never|--interactive=no|--interactive=none)
+		(--interactive=never|--interactive=no|--interactive=none)
 			interactive=0
 			shift
 			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
-		-I|--interactive=once)
+		(-I|--interactive=once)
 			interactive=2
 			shift
 			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
-		-i|--interactive|--interactive=always|--interactive=yes)
+		(-i|--interactive|--interactive=always|--interactive=yes)
 			interactive=3
 			shift
 			echo "TODO: implement -i/-I/--interactive"; exit 5
 			;;
-		--interactive=*)
+		(--interactive=*)
 			# message from GNU rm
 			echo "zap: ambiguous argument ‘$1’
 Valid arguments for ‘--interactive’ are:
@@ -391,35 +391,35 @@ Valid arguments for ‘--interactive’ are:
 Try '$0 --help' for more information."
 			exit 5
 			;;
-		--strategy|-s)
+		(--strategy|-s)
 			ZAP_STRATEGY="$2"
 			shift
 			shift
 			;;
-		--strategy=*)
+		(--strategy=*)
 			arg=${1#--strategy=}
 			shift
 			set -- --strategy "$arg" "$@"
 			;;
-		--version) # necessary for man2help
+		(--version) # necessary for man2help
 			echo "zap.sh 0.0.14"
 			exit
 			;;
-		--)
+		(--)
 			shift
 			break
 			;;
-		-[^-][^-]*) # expand multiple single-char options (e.g. -rf)
+		(-[^-][^-]*) # expand multiple single-char options (e.g. -rf)
 			shift
 			other="${opt#-?}"
 			set -- "${opt%"$other"}" "-${other}" "$@"
 			;;
-		-*)
+		(-*)
 			echo "ERROR: Unknown option: $1" >&2
 			print_usage
 			exit 2
 			;;
-		*)
+		(*)
 			break
 			;;
 	esac
@@ -467,7 +467,7 @@ fi
 choose_strategy() {
 	UNAME=$(command -v uname) || exit 2 # https://gist.github.com/prabirshrestha/3080525?permalink_comment_id=2962265#gistcomment-2962265
 	case $("${UNAME}" | tr '[:upper:]' '[:lower:]') in
-		msys*|cygwin*|mingw*|nt|win*)
+		(msys*|cygwin*|mingw*|nt|win*)
 			echo "Windows isn't currently supported!" >&2
 			return 1
 	esac
@@ -516,7 +516,7 @@ if [ -n "$force" ]; then
 fi
 
 case "$ZAP_STRATEGY" in
-	freedesktop)
+	(freedesktop)
 		# https://specifications.freedesktop.org/trash-spec/latest/
 		set -o noclobber # don't overwrite file when using >
 		for file in "$@"; do
