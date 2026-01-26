@@ -402,7 +402,7 @@ Try '$0 --help' for more information."
 			set -- --strategy "$arg" "$@"
 			;;
 		(--version) # necessary for man2help
-			echo "zap.sh 0.0.14"
+			echo "zap.sh 0.0.15"
 			exit
 			;;
 		(--)
